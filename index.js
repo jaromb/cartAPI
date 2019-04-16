@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 const secret = 'this is my secret'
 
 const port = process.env.PORT || 4000
-const url = process.env.DB_URL || 'mongodb://jbridges:12345@cluster0-shard-00-00-xozgh.mongodb.net:27017,cluster0-shard-00-01-xozgh.mongodb.net:27017,cluster0-shard-00-02-xozgh.mongodb.net:27017/MyHelioDB?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true'
+const url = process.env.DB_URL
 const db = monk(url)
 
 db.then(() => {
