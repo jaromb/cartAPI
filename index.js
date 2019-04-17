@@ -84,8 +84,7 @@ app.post('/admin/login', (req, res) => {
         .then(result =>  {
             const token = jwt.sign(result, secret);
             console.log(token)
-            res.cookie('token', token)
-            res.send(result)
+            res.cookie('token', token, {httpOnly: false})
         })  
 })
 
