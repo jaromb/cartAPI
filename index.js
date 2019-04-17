@@ -21,7 +21,7 @@ const items = db.get('items')
 const cart = db.get('cart')
 const users = db.get('users')
 
-// app.use(cors())
+app.use(cors({origin: 'http://localhost:3000'}))
 app.use(headers)
 app.use(bodyParser.json())
 app.use(cookieParser())
@@ -79,6 +79,7 @@ app.post('/users', async (req, res) => {
 })
 
 app.post('/admin/login', (req, res) => {
+    cors('localhost:3000')
     console.log('login POST activated')
     users.findOne({username: req.body.username, password: req.body.password})
         .then(result =>  {
