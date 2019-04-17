@@ -21,7 +21,7 @@ const items = db.get('items')
 const cart = db.get('cart')
 const users = db.get('users')
 
-app.use(cors())
+// app.use(cors())
 app.use(headers)
 app.use(bodyParser.json())
 app.use(cookieParser())
