@@ -79,7 +79,6 @@ app.post('/users', async (req, res) => {
 })
 
 app.post('/admin/login', (req, res) => {
-    cors('localhost:3000')
     console.log('login POST activated')
     users.findOne({username: req.body.username, password: req.body.password})
         .then(result =>  {
