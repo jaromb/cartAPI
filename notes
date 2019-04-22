@@ -1,0 +1,18 @@
+app.get
+try{
+    jwt.verify(req.cookies.token, secret)
+    code to run
+}
+catch (error) {
+    res.status(401).end();
+}
+
+or
+
+if (error) {
+    res.status(401).end()
+}
+else {
+    jwt.verify(req.cookies.token, secret)
+    code to run
+}
