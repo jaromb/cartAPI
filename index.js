@@ -20,8 +20,9 @@ db.then(() => {
 const items = db.get('items')
 const cart = db.get('cart')
 const users = db.get('users')
+const admins = db.get('admins')
 
-// app.use(cors({origin: http://localhost:3000}))
+
 app.use(headers)
 app.use(bodyParser.json())
 app.use(cookieParser())
@@ -34,36 +35,51 @@ app.use(cookieParser())
 
 //using promises
 app.get('/items', (req,res)  => {
-    try {
-        console.log('get items try activated')
-    jwt.verify(req.cookies.token, secret)
+        console.log('get items activated')
     items.find()
-    .then(results => res.send(results))
-    } catch {
-        console.log('get items catch activated')
+    .then(results => res.send(results))   
+}
+)
+
+app.get('/unique-cart', (req,res) => {
+    // verify user and get cart specific to that user
+    decode = jwt.verify(req.cookies.userToken, secret)
+
+    try {
+        cart.find({user: decode})
+        .then(results => res.send(results))
+    }
+    catch {
         res.status(401).end()
     }
 }
 )
 
-app.get('/cart', (req,res) =>
-    cart.find()
-        .then(results => res.send(results))
-)
-
 app.get('/users', (req,res) => {
     try {
         console.log('attempting to access user database')
-        jwt.verify(req.cookies.token, secret) 
+        jwt.verify(req.cookies.adminToken, secret) 
         users.find()
         .then(results => res.send(results)) 
         
     }
     catch {
         console.log('User GET catch process performed')
-        res.redirect('..')
+        res.status(401).end()
     }
 })
+
+app.get('/admins', (req,res) =>{
+    try {
+        jwt.verify(req.cookies.adminToken, secret)
+        admins.find()
+        .then(results => res.send(results))
+    }
+    catch {
+            res.status(401).end()
+    }
+}
+)
 
 
 app.get('/', async (req, res) => {
@@ -88,7 +104,7 @@ app.post('/items', async (req, res) => {
             items.update({_id: req.body._id}, {_id: req.body._id, name: req.body.name, price: req.body.price, image: req.body.image})
     } 
 }
-    try{ jwt.verify(req.cookies.token, secret)
+    try{ jwt.verify(req.cookies.adminToken, secret)
     await handlePost(req)
     items.find()
         .then(result => res.send(result))
@@ -101,20 +117,25 @@ app.post('/items', async (req, res) => {
 
 app.post('/users', async (req, res) => {
     console.log('users POST endpoint activated')
-    jwt.verify(req.cookies.token, secret)
+    jwt.verify(req.cookies.userToken, secret)
     await users.insert(req.body)
     users.find().then(result => res.send(result))
 })
 
+app.post('/admins', async (req, res) => {
+    jwt.verify(req.cookies.adminToken, secret)
+    await admins.insert(req.body)
+    users.find().then(result => res.send(result))
+})
+
 app.post('/admin/login', (req, res) => {
-    console.log('login POST activated')
-    users.findOne({username: req.body.username, password: req.body.password})
-        .then(result =>  {
-            const token = jwt.sign(result, secret);
-            console.log(token)
-            res.cookie('token', token)
-            res.status(200).send({
-                result      
+    console.log('Admin login POST activated')
+    admins.findOne({username: req.body.username, password: req.body.password})
+    .then(result =>  {
+        const adminToken = jwt.sign(result.username, secret)
+        res.cookie('adminToken', adminToken)
+        res.status(200).send({
+            result      
         }) 
     })
         .catch(() => {
@@ -122,14 +143,44 @@ app.post('/admin/login', (req, res) => {
         }) 
 })
 
+app.post('/user/login', (req, res) => {
+    console.log('user login POST activated')
+    users.findOne({username: req.body.username, password: req.body.password})
+    .then(result => {
+        console.log(result)
+        const userToken = jwt.sign(result.username, secret)
+        res.cookie('userToken', userToken)
+        res.status(200).send({
+            result
+        })
+    })
+        .catch(() =>{
+            res.status(401).end();
+    })
+})
+
+app.get('/user/logout', (req, res) => {
+    res.clearCookie('userToken').status(200).end()
+})
 
 
 app.post('/cart', async (req, res) => {
+//    let decoded = jwt.decode(req.cookies.userToken)
+//    console.log(decoded)
+   decode = jwt.verify(req.cookies.userToken, secret)
+
    item = req.body
+   item.user = decode
+   console.log(item.user)
+   item.itemID = item._id
+   delete item._id
+
+   console.log(item)
+
     async function addItem(item) {
         console.log("ADD ITEM")
         await cart.insert(item)
-            cart.find()
+            cart.find({user: decode})
             .then(result => res.send(result))
         } 
         addItem(item)                    
@@ -137,18 +188,21 @@ app.post('/cart', async (req, res) => {
 
    
 app.put('/cart', async (req,res) => {
-    item = req.body
+    const item = req.body
     console.log('update item')
+
+    decode = jwt.verify(req.cookies.userToken, secret)
+
     await cart.findOneAndUpdate({_id: item._id}, item)
-        cart.find()
+        cart.find({user: decode})
             .then(result => res.send(result))
     })
 
 app.put('/users', async (req,res) => {
-    item = req.body
-    console.log('update item')
+    const item = req.body
+    console.log('update user')
     
-    try {jwt.verify(req.cookies.token, secret)
+    try {jwt.verify(req.cookies.adminToken, secret)
      await users.findOneAndUpdate({_id: item._id}, item)
          users.find()
              .then(result => res.send(result))
@@ -157,6 +211,20 @@ app.put('/users', async (req,res) => {
         res.status(401).end()
     }
      })
+
+app.put('/admins', async (req, res) => {
+    const item = req.body
+    try {
+        jwt.verify(req.cookies.adminToken, secret)
+        await admins.findOneAndUpdate({_id: item._id}, item)
+            admins.find()
+                .then(result => res.send(result))
+    }
+    catch{
+        res.status(401).end()
+    }
+
+})     
 
 
 // app.patch('/items/:id', (req, res) => {
@@ -170,17 +238,18 @@ app.put('/users', async (req,res) => {
 
 
 app.delete('/cart/:_id', async (req, res) => {  
-   console.log('cart DELETE activated')
+    decode = jwt.verify(req.cookies.userToken, secret)
+    console.log('cart DELETE activated')
                
     await cart.findOneAndDelete({_id : req.params._id})
-        cart.find()
+        cart.find({user: decode})
             .then(result => res.send(result))     
 })
 
 app.delete('/users/:_id', async (req, res) => {  
     console.log('cart DELETE activated')
      
-    try { jwt.verify(req.cookies.token, secret)           
+    try { jwt.verify(req.cookies.adminToken, secret)           
      await users.findOneAndDelete({_id : req.params._id})
          users.find()
              .then(result => res.send(result))   
@@ -193,7 +262,7 @@ app.delete('/users/:_id', async (req, res) => {
 
 
 app.delete('/items/:_id', async (req, res) => {  
-   jwt.verify(req.cookies.token, secret)
+   jwt.verify(req.cookies.adminToken, secret)
     await items.findOneAndDelete({_id: req.params._id})
     items.find()
         .then(result=> res.send(result))          
