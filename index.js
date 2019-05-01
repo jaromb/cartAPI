@@ -3,7 +3,6 @@ const cookieParser = require('cookie-parser')
 const app = express()
 const bodyParser = require('body-parser')
 const headers = require('./headers')
-// const cors = require('cors')
 const monk = require('monk')
 const jwt = require('jsonwebtoken');
 
@@ -41,9 +40,23 @@ app.get('/items', (req,res)  => {
 }
 )
 
+app.get('/admin/items', (req,res) => {
+    try {
+        console.log('attempting to access user database')
+        jwt.verify(req.cookies.adminToken, secret) 
+        items.find()
+        .then(results => res.send(results)) 
+        
+    }
+    catch {
+        console.log('User GET catch process performed')
+        res.status(401).end()
+    }
+})
+
 app.get('/unique-cart', (req,res) => {
     // verify user and get cart specific to that user
-    decode = jwt.verify(req.cookies.userToken, secret)
+    decode = req.cookies.userToken ? jwt.verify(req.cookies.userToken, secret) : 'guest'
 
     try {
         cart.find({user: decode})
@@ -86,9 +99,6 @@ app.get('/', async (req, res) => {
     res.send('Welcome to my API')
 })
 
-app.get('/admin/login', (req, res) => {
-    res.send('Login page')
-})
 
 app.post('/items', async (req, res) => {
     console.log('/items POST end point activated')
@@ -107,7 +117,7 @@ app.post('/items', async (req, res) => {
     try{ jwt.verify(req.cookies.adminToken, secret)
     await handlePost(req)
     items.find()
-        .then(result => res.send(result))
+        .then(result => res.status(200).send(result))
     }
     catch {
         res.status(401).end()
@@ -116,11 +126,30 @@ app.post('/items', async (req, res) => {
 
 
 app.post('/users', async (req, res) => {
-    console.log('users POST endpoint activated')
-    jwt.verify(req.cookies.userToken, secret)
-    await users.insert(req.body)
-    users.find().then(result => res.send(result))
+    console.log('users creation (POST) endpoint activated')
+    console.log(req.body.username)
+    let userSearch
+    await users.findOne({username: req.body.username})
+    .then(result => userSearch = result)
+console.log(userSearch)
+    try {    
+        console.log('user POST try activated')
+        if(userSearch === null) {
+            console.log('if statement passed')
+             await users.insert(req.body)
+             users.findOne({username: req.body.username})
+                .then(result => res.send(result))  
+        }
+        else {
+            console.error(error)
+        }
+    }
+    catch {
+        console.log('user POST catch activated')
+        res.status(409).end()
+    }
 })
+
 
 app.post('/admins', async (req, res) => {
     jwt.verify(req.cookies.adminToken, secret)
@@ -163,11 +192,14 @@ app.get('/user/logout', (req, res) => {
     res.clearCookie('userToken').status(200).end()
 })
 
+app.get('/admin/logout', (req, res) => {
+    res.clearCookie('adminToken').status(200).end()
+})
+
 
 app.post('/cart', async (req, res) => {
-//    let decoded = jwt.decode(req.cookies.userToken)
-//    console.log(decoded)
-   decode = jwt.verify(req.cookies.userToken, secret)
+
+   decode = req.cookies.userToken ? jwt.verify(req.cookies.userToken, secret) : "guest"
 
    item = req.body
    item.user = decode
@@ -191,7 +223,7 @@ app.put('/cart', async (req,res) => {
     const item = req.body
     console.log('update item')
 
-    decode = jwt.verify(req.cookies.userToken, secret)
+    decode = req.cookies.userToken ? jwt.verify(req.cookies.userToken, secret) : "guest"
 
     await cart.findOneAndUpdate({_id: item._id}, item)
         cart.find({user: decode})
@@ -238,7 +270,7 @@ app.put('/admins', async (req, res) => {
 
 
 app.delete('/cart/:_id', async (req, res) => {  
-    decode = jwt.verify(req.cookies.userToken, secret)
+    decode = req.cookies.userToken ? jwt.verify(req.cookies.userToken, secret) : "guest"
     console.log('cart DELETE activated')
                
     await cart.findOneAndDelete({_id : req.params._id})
@@ -247,7 +279,7 @@ app.delete('/cart/:_id', async (req, res) => {
 })
 
 app.delete('/users/:_id', async (req, res) => {  
-    console.log('cart DELETE activated')
+    console.log('user DELETE activated')
      
     try { jwt.verify(req.cookies.adminToken, secret)           
      await users.findOneAndDelete({_id : req.params._id})
