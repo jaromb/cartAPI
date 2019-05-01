@@ -42,7 +42,7 @@ app.get('/items', (req,res)  => {
 
 app.get('/admin/items', (req,res) => {
     try {
-        console.log('attempting to access user database')
+        console.log('attempting to access items database')
         jwt.verify(req.cookies.adminToken, secret) 
         items.find()
         .then(results => res.send(results)) 
@@ -150,11 +150,36 @@ console.log(userSearch)
     }
 })
 
+app.post('/admin/user-management', async (req, res) => {
+    console.log('users creation (POST) endpoint activated')
+    console.log(req.body.username)
+    let userSearch
+    await users.findOne({username: req.body.username})
+    .then(result => userSearch = result)
+console.log(userSearch)
+    try {    
+        console.log('user POST try activated')
+        if(userSearch === null) {
+            console.log('if statement passed')
+             await users.insert(req.body)
+             users.find()
+                .then(result => res.send(result))  
+        }
+        else {
+            console.error(error)
+        }
+    }
+    catch {
+        console.log('user POST catch activated')
+        res.status(409).end()
+    }
+})
+
 
 app.post('/admins', async (req, res) => {
     jwt.verify(req.cookies.adminToken, secret)
     await admins.insert(req.body)
-    users.find().then(result => res.send(result))
+    admins.find().then(result => res.send(result))
 })
 
 app.post('/admin/login', (req, res) => {
@@ -284,6 +309,19 @@ app.delete('/users/:_id', async (req, res) => {
     try { jwt.verify(req.cookies.adminToken, secret)           
      await users.findOneAndDelete({_id : req.params._id})
          users.find()
+             .then(result => res.send(result))   
+    }
+    catch{
+        res.status(401).end()
+    }  
+ })
+
+ app.delete('/admins/:_id', async (req, res) => {  
+    console.log('user DELETE activated')
+     
+    try { jwt.verify(req.cookies.adminToken, secret)           
+     await admins.findOneAndDelete({_id : req.params._id})
+         admins.find()
              .then(result => res.send(result))   
     }
     catch{
