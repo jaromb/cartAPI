@@ -1,5 +1,5 @@
 module.exports = (req, res, next) => {
-  var allowedOrigins = ['https://my-helio-cart.herokuapp.com', 'http://localhost:3002', 'http://localhost:3001', 'http://localhost:3000'];
+  var allowedOrigins = ['https://my-helio-cart.herokuapp.com', 'https://my-helio-cart-admin.herokuapp.com', 'http://localhost:3002', 'http://localhost:3001', 'http://localhost:3000'];
   var origin = req.headers.origin;
   if(allowedOrigins.indexOf(origin) !== -1){
        res.setHeader('Access-Control-Allow-Origin', origin);

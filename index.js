@@ -49,7 +49,7 @@ app.get('/admin/items', (req,res) => {
         
     }
     catch {
-        console.log('User GET catch process performed')
+        console.log('items GET catch process performed')
         res.status(401).end()
     }
 })
@@ -271,13 +271,16 @@ app.put('/users', async (req,res) => {
 
 app.put('/admins', async (req, res) => {
     const item = req.body
+    console.log("admin PUT activated")
     try {
+        console.log('admin PUT try activated')
         jwt.verify(req.cookies.adminToken, secret)
         await admins.findOneAndUpdate({_id: item._id}, item)
             admins.find()
                 .then(result => res.send(result))
     }
     catch{
+        console.log('admin PUT catch activated')
         res.status(401).end()
     }
 
