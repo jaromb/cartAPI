@@ -203,7 +203,7 @@ app.post('/user/login', (req, res) => {
     .then(result => {
         console.log(result)
         const userToken = jwt.sign(result.username, secret)
-        res.cookie('userToken', userToken)
+        res.cookie('userToken', userToken, `SameSite=None`, `Secure`)
         res.status(200).send({
             result
         })
