@@ -187,7 +187,7 @@ app.post('/admin/login', (req, res) => {
     admins.findOne({username: req.body.username, password: req.body.password})
     .then(result =>  {
         const adminToken = jwt.sign(result.username, secret)
-        res.cookie('adminToken', adminToken)
+        res.cookie('adminToken', adminToken, {SameSite: 'None', Secure: true})
         res.status(200).send({
             result      
         }) 
@@ -203,7 +203,7 @@ app.post('/user/login', (req, res) => {
     .then(result => {
         console.log(result)
         const userToken = jwt.sign(result.username, secret)
-        res.cookie('userToken', userToken, `SameSite=None`, `Secure`)
+        res.cookie('userToken', userToken, {SameSite: 'None', Secure: true})
         res.status(200).send({
             result
         })
