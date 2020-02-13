@@ -194,9 +194,10 @@ app.post("/user/login", (req, res) => {
     .then(result => {
       console.log(result);
       const userToken = jwt.sign(result.username, secret);
+      const response = {username: result.username, token: userToken} 
       res.cookie("userToken", userToken, { sameSite: "none", secure: true });
       res.status(200).send({
-        result
+        response
       });
     })
     .catch(() => {
