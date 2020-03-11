@@ -16,3 +16,17 @@ else {
     jwt.verify(req.cookies.token, secret)
     code to run
 }
+
+
+//using async await
+//app.get('/', async function(req, res) {
+//     const results = await items.find()
+//     res.status(200).send(results)
+// })
+
+//using promises
+
+// app.get("/items", (req, res) => {
+//   console.log("get items activated");
+//   items.find().then(results => res.send(results));
+// });
