@@ -8,7 +8,7 @@ const url =
   process.env.DB_URL ||
   "mongodb://jbridges:12345@cluster0-shard-00-00-xozgh.mongodb.net:27017,cluster0-shard-00-01-xozgh.mongodb.net:27017,cluster0-shard-00-02-xozgh.mongodb.net:27017/MyHelioDB?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true";
 const db = monk(url);
-const users = db.get("user");
+const users = db.get("users");
 
 router.post("/login", (req, res) => {
   console.log("user login POST activated");
