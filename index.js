@@ -4,7 +4,6 @@ const app = express();
 const bodyParser = require("body-parser");
 const headers = require("./headers");
 const monk = require("monk");
-const jwt = require("jsonwebtoken");
 
 const secret = "this is my secret";
 const port = process.env.PORT || 4000;

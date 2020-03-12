@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const monk = require("monk");
 const jwt = require("jsonwebtoken");
+const secret = "this is my secret";
 
 const url =
   process.env.DB_URL ||
